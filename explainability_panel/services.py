@@ -1,6 +1,8 @@
 import os
+import copy
 import configparser
 import numpy as np
+import networkx as nx
 import grid2op
 from grid2op.Reward import L2RPNSandBoxScore, L2RPNReward
 from grid2op.PlotGrid import PlotMatplot, PlotPlotly
@@ -26,6 +28,7 @@ class MyEnv():
         self.path_env = path_env
         self.env = None
         self.obs = None
+        self.old_obs = None
         self.env_reset = False
         self.next = False
         self.config = configparser.ConfigParser()
@@ -35,6 +38,7 @@ class MyEnv():
         self.old_rho = None
         self.current_rho = None
         self.expert_action = None
+        self.expert_rho = None
         # self.reset()
         
     def reset(self, seed=None, chronic_id=None):
@@ -65,6 +69,7 @@ class MyEnv():
         if action is None:
             action = self.env.action_space({})
         # TODO: the other information as GameOver could be interesting to avoid errors in interface
+        self.old_obs = copy.deepcopy(self.obs)
         self.old_rho = self.obs.rho.max()
         self.obs, *_ = self.env.step(action)
         self.current_rho = self.obs.rho.max()
@@ -75,6 +80,7 @@ class MyEnv():
         if self.obs is None:
             raise Exception("The environment should be loaded at first")
         # TODO: This is for debugging purpose, could be removed once everything works as expected
+        self.old_obs = copy.deepcopy(self.obs)
         self.old_rho = self.obs.rho.max()
         self.obs = progress_env_to_overload(self.env)
         self.current_rho = self.obs.rho.max()
@@ -89,7 +95,8 @@ class MyEnv():
     def suggest_expert_action(self):
         if not(self.env_reset) or (self.obs is None) or (self.env is None):
             raise Exception("The environment should be loaded at first")
-        ltc = list(np.where(self.obs.rho>1.)[0])#overloaded line to solve
+        ltc = list(np.where(self.obs.rho>=1.)[0])#overloaded line to solve
+        print("ltc:", ltc)
         if not(ltc):
             self.expert_action = self.env.action_space({})
             return self.expert_action
@@ -107,6 +114,10 @@ class MyEnv():
                                                                               debug=False)
         most_efficient_action = expert_system_results["Efficacity"].values.argmax()
         self.expert_action = actions[most_efficient_action]
+        
+        new_obs_expert, *_ = self.env.simulate(self.expert_action)
+        self.expert_rho = new_obs_expert.rho.max()
+        
         return self.expert_action
 
     def plot_obs(self):
@@ -176,7 +187,80 @@ def progress_env_to_overload(env):
             print(obs.rho.max())
             return obs
 
+def compute_stats(obs, agent_action, expert_action):
+    distance = compute_distance(obs, agent_action, expert_action)
+    rho_imp = compute_rho_improvement()
+    rho_diff = compute_rho_difference()
+    test_stat = compute_test_wilcoxon()
+    test_pval = compute_pval_wilcoxon()
+    
+    return {
+        "distance": distance,
+        "rho_imp": rho_imp,
+        "rho_diff": rho_diff,
+        "test_stat": test_stat,
+        "test_pval": test_pval
+    }
+    
+def compute_distance(obs, agent_action, expert_action):
+    if my_env.env is None or my_env.obs is None:
+        raise Exception("The environment is not loaded properly!")
+    do_nothing = my_env.env.action_space({})
+    if agent_action == do_nothing or expert_action == do_nothing:
+        return ""
+    graph = obs.get_energy_graph()
+    print(expert_action)
+    print(agent_action)
+    expert_action_sub = np.where(expert_action.get_topological_impact()[1])[0][0]
+    agent_action_sub = np.where(agent_action.get_topological_impact()[1])[0][0]
+    Information = nx.shortest_path_length(graph, 
+                                          source=expert_action_sub,
+                                          target=agent_action_sub)
+    return Information
 
+def compute_rho_improvement():
+    if (my_env.old_rho is None) or (my_env.current_rho is None):
+        return ""
+    Information = f"{(my_env.old_rho - my_env.current_rho):.2f}"
+    return Information
+
+def compute_rho_difference():
+    if my_env.env is None:
+        raise Exception("The environment is not yet loaded.")
+    # # Information = f"{0.2}"
+    # expert_action = my_env.suggest_expert_action()
+    # print("expert_action: ", expert_action)
+    if (my_env.expert_action is None) or (my_env.expert_action == my_env.env.action_space({})):
+        return ""
+    # # old_rho = my_env.obs.rho.max()
+    # # old_rho = my_env.old_rho
+    # # TODO: Test if there is no gameover after application of this action
+    # new_obs_expert, *_ = my_env.env.simulate(expert_action)
+    # new_rho_expert = new_obs_expert.rho.max()
+    
+    # # new_obs, *_ = my_env.env.simulate(my_agent.action)
+    # # new_rho_rl = new_obs.rho.max()
+    
+    # rho_diff = my_env.current_rho - new_rho_expert
+    rho_diff = my_env.current_rho - my_env.expert_rho 
+    Information = f"{rho_diff:.2f}"
+    return Information
+
+def compute_test_wilcoxon():
+    if my_env.env is None:
+        raise Exception("The environment is not yet loaded.")
+    if (my_env.expert_action is None) or (my_env.expert_action == my_env.env.action_space({})):
+        return ""
+    Information = f"Test statistic: {0.2}"
+    return Information
+
+def compute_pval_wilcoxon():
+    if my_env.env is None:
+        raise Exception("The environment is not yet loaded.")
+    if (my_env.expert_action is None) or (my_env.expert_action == my_env.env.action_space({})):
+        return ""
+    Information = f"P-value: {0.03}"
+    return Information
 
 ENV_PATH = "../ressources/ai4realnet_small"
 EXPERT_CONFIG_PATH=os.path.join(get_package_root(), "explainability_panel", "config_expert.ini")

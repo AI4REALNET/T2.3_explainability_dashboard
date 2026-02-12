@@ -2,13 +2,16 @@
 #                                       Load button callbacks
 ########################################################################################################
 import time
+import numpy as np
 from dash import callback, Output, Input, State
 from services import my_agent, my_env
 from dash import dcc
+from dash import ctx, no_update
 
 @callback(
     # Output("graphic-output", "figure", allow_duplicate=True),
     Output("graphic-output", "children", allow_duplicate=True),
+    Output("env-loaded", "data"),
     Output("next-button", "disabled"),
     Output("action-button", "disabled"),
     # Output("overload-graph", "children", allow_duplicate=True),
@@ -25,7 +28,7 @@ def load_output(n):
     if n:
         env, _ = my_env.reset()
         my_agent.load(env)
-        return dcc.Graph(figure=my_env.plot_overload_graph()), False, False
+        return dcc.Graph(figure=my_env.plot_overload_graph()), True, False, False
         # return  dcc.Graph(figure=my_env.plot_obs())
         # svg = my_env.plot_overload_graph()
         # cairosvg.svg2png(bytestring=svg, write_to="output.png")
@@ -132,12 +135,51 @@ def action_reset(n):
     if n:
         return "Agent's action ... "
     
-# Clean the explanation textbox
 @callback(
-    Output("explanation-text", "children", allow_duplicate=True),
+    Output("expert-text", "children", allow_duplicate=True),
     [Input("load-button", "n_clicks")],
     prevent_initial_call=True
 )
-def explanation_reset(n):
+def expert_action_reset(n):
     if n:
-        return "Explanation of the agent recommendation ..."
+        return "Expert action ... "
+    
+# Clean the explanation textbox
+@callback(
+    Output("explanation-text", "children", allow_duplicate=True),
+    Input("env-loaded", "data"),
+    # State("env-name-output", "children"),
+    prevent_initial_call=True
+)
+def explanation_reset(env_ready):
+    # if ctx.triggered_id != "load-button":
+    #     return no_update
+    
+    # if not n:
+    #     print("hello from here************************")
+    #     print(env_name)
+    #     return no_update
+    # print("hello from here---------------------------")
+    if not env_ready:
+        return no_update
+    # if n and (env_name is not None and env_name != ""):
+    text = ""
+    if my_env.obs is not None:
+        text += f"The Power Grid is charged at {my_env.obs.rho.max():.2f}.\n"
+        if np.any(np.where(my_env.obs.rho > .99)):
+            overloaded_lines = np.where(my_env.obs.rho > .99)[0]
+            text += f"The power lines {overloaded_lines} are overloaded.\n"    
+            sub_ids = []
+            for line_id in overloaded_lines:
+                sub_or = my_env.env.line_or_to_subid[line_id]
+                sub_ex = my_env.env.line_ex_to_subid[line_id]
+                sub_ids.append(sub_or)
+                sub_ids.append(sub_ex)
+            sub_ids = list(np.unique(sub_ids))
+            sub_ids = [int(el) for el in sub_ids]
+            text += f"Substations {sub_ids} are concerned.\n"   
+    else:
+        text += "Explanation of the agent recommendation ..."
+    return text
+    
+    # return no_update
