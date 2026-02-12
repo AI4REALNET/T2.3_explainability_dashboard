@@ -44,7 +44,7 @@ A screenshot of the Explainability dashboard is provided below. It composed of t
 
 2. **Visualization panel**: showing whether the grid or an overload graph (in the case of overload) obtained using the ExpertOp4Grid package and highlighting the highest impact zone near the overload as well as the actual agent's action. The agent recommendations will also be shown on this graph.
 
-![an image](./imgs/xpanel.png)
+![an image](./imgs/xpanel_new.png)
 
 ### Usage
 You can run the dashboard by simply executing the following command:
