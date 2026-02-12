@@ -25,8 +25,12 @@ pip install -r requiremnets.txt
 ## Requirements
 Two major requirements for this explainability panel are:
 1. **Agent**: An already trained agent on one of the power grid environments
+> [!WARNING]
+> This package works only with [ExpertAgent Heuristic](https://github.com/AI4REALNET/T2.1_deep_expert) developed in the context of AI4REALNET project. It could be improved in future to be adapted to other agents.
 
 2. **Environment**: One of the power grid environments designed for the projet. It could also be used for other environments.
+> [!WARNING]
+> This package works only with [`ai4realnet_small`](https://github.com/AI4REALNET/grid2op-scenario) environment designed for AI4REALNET project and that corresponds to the first usecase of Power Grids. It could be improved in future to include other environments.
 
 3. **ExpertOp4Grid**: You should configure the ExpertOp4Grid configuration file, which is available for an example in [`explainability_panel/config_expert.ini`](explainability_panel/config_expert.ini)
 
