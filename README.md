@@ -37,6 +37,13 @@ cd l2rpn-2023-ljn-agent
 pip install -U .
 ```
 
+#### ExpertAgent package
+```
+git clone git@github.com:AI4REALNET/T2.1_deep_expert.git
+cd T2.1_deep_expert
+pip install -U .
+```
+
 ### Install the requirements for the current package
 ```bash
 pip install -r requiremnets.txt
