@@ -2,14 +2,17 @@
 This repository provides an explainability panel for RL agents developed for Power Grid use case. It is related to Task 2.3 of AI4REALNET project.
 
 
-## Installation guide
-Create an environment using Conda (recommended)
+# Installation guide
+To be able to run the experiments in this repository, the following steps show how to install this package and its dependencies from source.
+
+### Setup a Virtualenv (optional)
+#### Create an environment using `Conda` (recommended)
 ```bash
-conda create -n env_name python=3.8
-conda activate env_name
+conda create -n env_explainability python=3.10
+conda activate env_explainability
 ```
 
-Create a virtual environment
+#### Create a virtual environment using `virtualenv`
 ```bash
 cd my-project-folder
 pip3 install -U virtualenv
@@ -17,7 +20,24 @@ python3 -m virtualenv my_env
 source my_env/bin/activate
 ```
 
-Install the dependencies
+### Install the prerequisites
+> [!IMPORTANT] 
+> These steps are mandatory to be able to use the package and its different functionalities
+#### ExpertOp4Grid package
+```bash
+git clone git@github.com:Mleyliabadi/ExpertOp4Grid.git
+cd ExpertOp4Grid
+pip install -U .
+```
+
+#### LJN Agent package
+```
+git clone git@github.com:Mleyliabadi/l2rpn-2023-ljn-agent.git
+cd l2rpn-2023-ljn-agent
+pip install -U .
+```
+
+### Install the requirements for the current package
 ```bash
 pip install -r requiremnets.txt
 ```
