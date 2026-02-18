@@ -68,8 +68,9 @@ A screenshot of the Explainability dashboard is provided below. It composed of t
 
 ### Usage
 You can run the dashboard by simply executing the following command:
-```python
-python explainability_panel/explainability.py
+```bash
+cd explainability_panel
+python explainability.py
 ```
 
 For the moment, an agent is hard coded inside the code. Future developments will allow the user to import a custom agent from the interface and analyze its recommendations.
